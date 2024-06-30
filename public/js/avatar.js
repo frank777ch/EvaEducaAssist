@@ -7,14 +7,14 @@ const {
 const modelUrl = "../eva/EvaEduca.model3.json";
 
 let currentModel;
-let floatDirection = 1;
+let app;
 
 const videoElement = document.querySelector(".input_video"),
     guideCanvas = document.querySelector("canvas.guides");
 
 (async function main() {
     // create pixi application
-    const app = new PIXI.Application({
+    app = new PIXI.Application({
         view: document.getElementById("live2d"),
         autoStart: true,
         backgroundAlpha: 0,
@@ -59,6 +59,14 @@ const videoElement = document.querySelector(".input_video"),
 
     // Start floating animation
     requestAnimationFrame(float);
+
+    // Add mouse move event for eye tracking
+    window.addEventListener("mousemove", onMouseMove);
+
+    // Schedule random eye movement every 2 seconds
+    setInterval(() => {
+        moveEyesRandomly();
+    }, 2000);
 })();
 
 window.mover_boca = (x, y, lerpAmount = 0.7) => {
@@ -138,10 +146,44 @@ function lerp(start, end, t) {
 function float(timestamp) {
     const coreModel = currentModel.internalModel.coreModel;
     const floatAmplitude = 10; // Amplitud de la flotación
-    const floatSpeed = 2; // Velocidad de la flotación
+    const floatSpeed = 1; // Velocidad de la flotación
     const value = Math.sin(timestamp * 0.001 * floatSpeed) * floatAmplitude;
 
     coreModel.setParameterValueById("ParamBodyAngleX", value);
 
     requestAnimationFrame(float);
+}
+
+// Función para el seguimiento de los ojos
+function onMouseMove(event) {
+    const coreModel = currentModel.internalModel.coreModel;
+    const rect = app.view.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const maxOffsetX = 1; // Máximo desplazamiento horizontal
+    const maxOffsetY = 1; // Máximo desplazamiento vertical
+
+    const paramEyeBallX = ((mouseX - centerX) / centerX) * maxOffsetX;
+    const paramEyeBallY = -((mouseY - centerY) / centerY) * maxOffsetY; // Invertir el eje Y
+
+    coreModel.setParameterValueById("ParamEyeBallX", paramEyeBallX);
+    coreModel.setParameterValueById("ParamEyeBallY", paramEyeBallY);
+}
+
+// Función para mover los ojos aleatoriamente
+function moveEyesRandomly() {
+    const coreModel = currentModel.internalModel.coreModel;
+
+    const maxOffsetX = 0.5; // Máximo desplazamiento horizontal
+    const maxOffsetY = 0.5; // Máximo desplazamiento vertical
+
+    const paramEyeBallX = (Math.random() * 2 - 1) * maxOffsetX;
+    const paramEyeBallY = (Math.random() * 2 - 1) * maxOffsetY;
+
+    coreModel.setParameterValueById("ParamEyeBallX", paramEyeBallX);
+    coreModel.setParameterValueById("ParamEyeBallY", paramEyeBallY);
 }

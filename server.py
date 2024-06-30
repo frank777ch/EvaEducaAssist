@@ -9,10 +9,7 @@ import signal
 
 load_dotenv()
 
-client = openai.OpenAI(
-    # This is the default and can be omitted
-    api_key=os.getenv("OPENAI_API_KEY"),
-)
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def exit_function(signum, frame):
     exit(0)
@@ -20,21 +17,21 @@ def exit_function(signum, frame):
 signal.signal(signal.SIGTERM, exit_function)
 signal.signal(signal.SIGINT, exit_function)
 
-path = os.path.join(os.path.dirname(__file__))
+path = os.path.dirname(__file__)
 
 websockets = {}
 
 agentBehavior = '''
 Eres un agente virtual.
-Tus respuestas deben ser de 3 oraciones con no mas de 5 palabras.
+Tus respuestas deben ser de 3 oraciones con no más de 5 palabras.
 '''
 
 def get_gpt_answer(messages):
-    completion = client.chat_completions.create(
-        model="gpt-3.5-turbo",  
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
         messages=messages
     )
-    return completion.choices[0].message.content
+    return response.choices[0].message['content']
 
 def process_message(data, websocket):
     print(data)
@@ -46,7 +43,7 @@ def process_message(data, websocket):
         websockets[data["id"]]["chat_history"].append({"role":"assistant","content":response})
         websocket.send_data({"action":"gpt_answer","message":response})
     else:
-        print("no action")
+        print("sin acción")
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self):
@@ -54,6 +51,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     
     def on_close(self):
         print("Websocket cerrado")
+        websockets_to_delete = [key for key, value in websockets.items() if value["ws"] == self]
+        for key in websockets_to_delete:
+            del websockets[key]
 
     def send_data(self, data):
         self.write_message(json.dumps(data))
@@ -62,12 +62,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         try:
             data = json.loads(message)
             process_message(data, self)
-        except TypeError:
-            print("error al procesar mensaje")
+        except json.JSONDecodeError:
+            print("Error al procesar mensaje")
 
 class StaticHandler(tornado.web.StaticFileHandler):
     def get_content_type(self):
-        _, extension = tornado.web.os.path.splitext(self.absolute_path)
+        _, extension = os.path.splitext(self.absolute_path)
         
         mime_types = {
             ".js": "application/javascript",
@@ -80,10 +80,10 @@ class StaticHandler(tornado.web.StaticFileHandler):
         
         return mime_types.get(extension, "text/plain")
 
-TornadoSettings = static_handler_args={'debug':False}
+TornadoSettings = {'debug': False}
 application = tornado.web.Application([
     (r'/command', WebSocketHandler),
-    (r'/(.*)', StaticHandler, {"path":os.path.join(path, "public\\"), "default_filename":"index.html"})
+    (r'/(.*)', StaticHandler, {"path": os.path.join(path, "public"), "default_filename": "index.html"})
 ], **TornadoSettings)
 
 if __name__ == '__main__':

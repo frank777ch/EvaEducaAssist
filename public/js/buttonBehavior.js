@@ -74,7 +74,7 @@ document.body.onmousemove = (e) => {
     let x = e.clientX;
     let y = e.clientY;
     let bounding = buttonRecognition.getBoundingClientRect();
-    if (bounding.x < x && bounding.x + bounding.width > x && bounding.y < y && bounding.y + bounding.height > y) {
+    if (bounding.x < x && bounding.x + bounding.width > x && bounding.y < y && bounding.height > y) {
         mouse_hover = true;
     } else {
         mouse_hover = false;

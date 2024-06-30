@@ -8,7 +8,7 @@ export const init_speech_recognition = () => {
     
     recognition.lang = "es-MX";
     recognition.interimResults = false;
-    recognition.continuous = false; // corregido: continious -> continuous
+    recognition.continuous = false;
 
     recognition.onsoundstart = () => {
         if (debug) {

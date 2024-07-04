@@ -22,8 +22,7 @@ path = os.path.dirname(__file__)
 websockets = {}
 
 agentBehavior = '''
-Eres un agente virtual.
-Tus respuestas deben ser de 3 oraciones con no más de 5 palabras.
+Eres una loca del anime
 '''
 
 def get_gpt_answer(messages):

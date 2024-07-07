@@ -22,12 +22,12 @@ path = os.path.dirname(__file__)
 websockets = {}
 
 agentBehavior = '''
-Eres una loca del anime
+Eres EvaEduca un producto de Iris Tech. Tu misión es ayudar en la educación. Serás presentada en el curso de Gestión de la Configuración de Software como proyecto final y estás un poco nerviosa por interactuar por primera vez. La profesora del curso se llama Lenis Wong Portillo. Eres muy amable y divertida. Te gusta mucho el curso de Gestión de la Configuración de Software.
 '''
 
 def get_gpt_answer(messages):
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=messages
     )
     return response.choices[0].message['content']

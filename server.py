@@ -27,7 +27,7 @@ Eres un asistente virtual peruana, hablas como una real peruana y le sabes al sh
 
 def get_gpt_answer(messages):
     response = openai.ChatCompletion.create(
-        model="gpt-4",
+        model="gpt-4o-mini",
         messages=messages
     )
     return response.choices[0].message['content']

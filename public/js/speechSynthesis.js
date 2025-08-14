@@ -4,30 +4,25 @@ let pitch = 1.0;
 let rate = 1.0;
 export let selected_voice;
 
-document.body.onload = () => {
-    let temporal_voices = synthetizer.getVoices();
-    for (let voice of temporal_voices) {
-        if (voice.lang.includes("es")) {
-            voices.push(voice);
-        }
-    }
+function loadVoices() {
+    voices = synthetizer.getVoices().filter(voice => voice.lang.includes("es"));
 
     if (voices.length < 1) {
-        console.log("Tu navegador no tiene voces en español.");
-        return -1;
-    } else if (voices.length == 1) {
+        console.warn("Tu navegador no tiene voces en español.");
+        return;
+    }
+
+    if (voices.length === 1) {
         selected_voice = voices[0];
     } else {
-        for (let voice of voices) {
-            if (voice.lang.includes("US")) {
-                selected_voice = voice;
-            }
-        }
-        if (!selected_voice) {
-            selected_voice = voices[0];
-        }
+        selected_voice = voices.find(v => v.lang.includes("US")) || voices[0];
     }
-};
+}
+
+if (typeof speechSynthesis !== "undefined") {
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+}
 
 let onendSynthetizer = console.log;
 
@@ -36,48 +31,41 @@ export const set_onEnd_synthetizer = (callback) => {
 };
 
 export const say = (text) => {
-    const current_utterance = new SpeechSynthesisUtterance(text);
-    current_utterance.voice = selected_voice;
-    current_utterance.pitch = pitch;
-    current_utterance.rate = rate;
-    current_utterance.onend = (e) => {
-        onendSynthetizer();
-    };
-    current_utterance.onerror = (e) => {
-        console.error("SpeechSynthesisUtterance.onerror", e);
-    };
+    if (!selected_voice) {
+        console.warn("No hay voz seleccionada aún. Intentando cargar...");
+        loadVoices();
+        if (!selected_voice) {
+            console.error("No se pudo reproducir, no hay voces disponibles.");
+            return;
+        }
+    }
 
-    synthetizer.speak(current_utterance);
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = selected_voice;
+    utterance.pitch = pitch;
+    utterance.rate = rate;
+    utterance.onend = onendSynthetizer;
+    utterance.onerror = (e) => console.error("SpeechSynthesisUtterance.onerror", e);
+
+    synthetizer.speak(utterance);
 };
 
 export const change_pitch = (value) => {
-    if (isNaN(Number(value))) {
-        console.log("El pitch tiene que ser numérico");
-        return -1;
-    } else if (value < 0) {
-        console.log("El pitch no puede ser negativo, asignando 0.1");
-        pitch = 0.1;
-    } else if (value > 2.0) {
-        console.log("El pitch no puede ser mayor de 2.0, asignando 2.0");
-        pitch = 2.0;
-    } else {
-        pitch = value;
+    const num = Number(value);
+    if (isNaN(num)) {
+        console.error("El pitch tiene que ser numérico");
+        return;
     }
+    pitch = Math.max(0.1, Math.min(2.0, num));
 };
 
 export const change_rate = (value) => {
-    if (isNaN(Number(value))) {
-        console.log("El rate tiene que ser numérico");
-        return -1;
-    } else if (value < 0) {
-        console.log("El rate no puede ser negativo, asignando 0.1");
-        rate = 0.1;
-    } else if (value > 2.0) {
-        console.log("El rate no puede ser mayor de 2.0, asignando 2.0");
-        rate = 2.0;
-    } else {
-        rate = value;
+    const num = Number(value);
+    if (isNaN(num)) {
+        console.error("El rate tiene que ser numérico");
+        return;
     }
+    rate = Math.max(0.1, Math.min(2.0, num));
 };
 
 export default voices;

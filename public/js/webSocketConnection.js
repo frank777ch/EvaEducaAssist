@@ -1,4 +1,4 @@
-const connection = new WebSocket("ws://localhost/command");
+const connection = new WebSocket("ws://localhost:8080/command");
 let callback = data => console.log(data);
 let id;
 
